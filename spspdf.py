@@ -27,10 +27,21 @@ def get_distance_matrix(addresses):
 
 
 def compute_routes(distance_matrix, num_vehicles):
-    """Calcula rotas otimizadas usando o OR-Tools."""
-    manager = pywrapcp.RoutingIndexManager(len(distance_matrix), num_vehicles, 0)
-    routing = pywrapcp.RoutingModel(manager)
+    if not distance_matrix:
+        print("A matriz de distâncias está vazia ou nula.")
+        return []
+    if num_vehicles <= 0:
+        print("O número de veículos deve ser maior que zero.")
+        return []
 
+    try:
+        manager = pywrapcp.RoutingIndexManager(len(distance_matrix), num_vehicles, 0)
+        routing = pywrapcp.RoutingModel(manager)
+    except Exception as e:
+        print(f"Erro ao criar o RoutingIndexManager: {e}")
+        return []
+    
+    
     def distance_callback(from_index, to_index):
         from_node = manager.IndexToNode(from_index)
         to_node = manager.IndexToNode(to_index)
