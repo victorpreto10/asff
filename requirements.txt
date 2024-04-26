@@ -59,3 +59,4 @@ yfinance==0.2.31
 zipp==3.17.0
 ortools
 googlemaps
+folium
