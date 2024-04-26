@@ -8,17 +8,22 @@ from ortools.constraint_solver import pywrapcp
 gmaps = googlemaps.Client(key='AIzaSyDp47NXg2DGMv5iZXyzNuR4JqH7VmAQbyQ')  # Substitua YOUR_API_KEY pela sua chave da API
 
 def get_distance_matrix(addresses):
-    matrix = gmaps.distance_matrix(addresses, addresses, mode="driving")
-    distances = []
-    for row in matrix['rows']:
-        row_distances = []
-        for element in row['elements']:
-            if element['status'] == 'OK':  # Verifica se o status do elemento é OK
-                row_distances.append(element['duration']['value'])
-            else:
-                row_distances.append(None)  # Pode usar None ou um valor padrão se a API retornar um erro
-        distances.append(row_distances)
-    return distances
+    try:
+        matrix = gmaps.distance_matrix(addresses, addresses, mode="driving")
+        # Certifique-se de que a resposta não contém erros
+        if matrix.get('status') != 'OK':
+            # Logar o status para análise mais detalhada
+            print(f"Erro na API: {matrix.get('error_message', 'Nenhuma mensagem de erro disponível.')}")
+            return None
+        distances = [[entry['duration']['value'] for entry in row['elements']] for row in matrix['rows']]
+        return distances
+    except googlemaps.exceptions.ApiError as e:
+        print(f"Erro ao acessar a API do Google Maps: {e}")
+        return None
+    except Exception as e:
+        print(f"Erro inesperado: {e}")
+        return None
+
 
 
 def compute_routes(distance_matrix, num_vehicles):
