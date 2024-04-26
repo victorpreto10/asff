@@ -5,7 +5,7 @@ from ortools.constraint_solver import routing_enums_pb2
 from ortools.constraint_solver import pywrapcp
 
 # Configuração do Google Maps API
-gmaps = googlemaps.Client(key='YOUR_API_KEY')  # Substitua YOUR_API_KEY pela sua chave da API
+gmaps = googlemaps.Client(key='AIzaSyDp47NXg2DGMv5iZXyzNuR4JqH7VmAQbyQ')  # Substitua YOUR_API_KEY pela sua chave da API
 
 def get_distance_matrix(addresses):
     """Busca a matriz de distâncias entre os endereços fornecidos."""
