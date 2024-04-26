@@ -60,3 +60,4 @@ zipp==3.17.0
 ortools
 googlemaps
 folium
+streamlit
