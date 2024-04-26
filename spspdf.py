@@ -8,10 +8,18 @@ from ortools.constraint_solver import pywrapcp
 gmaps = googlemaps.Client(key='AIzaSyDp47NXg2DGMv5iZXyzNuR4JqH7VmAQbyQ')  # Substitua YOUR_API_KEY pela sua chave da API
 
 def get_distance_matrix(addresses):
-    """Busca a matriz de distâncias entre os endereços fornecidos."""
     matrix = gmaps.distance_matrix(addresses, addresses, mode="driving")
-    distances = [[entry['duration']['value'] for entry in row['elements']] for row in matrix['rows']]
+    distances = []
+    for row in matrix['rows']:
+        row_distances = []
+        for element in row['elements']:
+            if element['status'] == 'OK':  # Verifica se o status do elemento é OK
+                row_distances.append(element['duration']['value'])
+            else:
+                row_distances.append(None)  # Pode usar None ou um valor padrão se a API retornar um erro
+        distances.append(row_distances)
     return distances
+
 
 def compute_routes(distance_matrix, num_vehicles):
     """Calcula rotas otimizadas usando o OR-Tools."""
