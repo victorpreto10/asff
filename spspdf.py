@@ -1,55 +1,63 @@
 import streamlit as st
-import pandas as pd
-from io import StringIO
+import googlemaps
+from datetime import datetime
+from ortools.constraint_solver import routing_enums_pb2
+from ortools.constraint_solver import pywrapcp
 
+# Configuração do Google Maps API
+gmaps = googlemaps.Client(key='YOUR_API_KEY')  # Substitua YOUR_API_KEY pela sua chave da API
 
-# Função para processar o arquivo Excel
-def process_file(uploaded_file):
-    df = pd.read_excel(uploaded_file, header=1)
-    if 'Price' in df.columns and df['Price'].dtype == 'object':
-        df['Price'] = df['Price'].str.replace(',', '').astype(float)
-    df['Operation'] = df['Qtde'].apply(lambda x: 'Buy' if x > 0 else 'Sell')
-    if 'Price' in df.columns:
-        df['Total Value'] = df['Price'] * df['Qtde']
-        grouped_df = df.groupby(['Operation', 'Ticker Bloomberg']).apply(
-            lambda x: pd.Series({
-                'Qtde': x['Qtde'].sum(),
-                'Weighted Price': (x['Total Value']).sum() / x['Qtde'].sum()
-            })).reset_index()
-    else:
-        grouped_df = df.groupby(['Operation', 'Ticker Bloomberg']).agg({'Qtde': 'sum'}).reset_index()
-    return grouped_df
+def get_distance_matrix(addresses):
+    """Busca a matriz de distâncias entre os endereços fornecidos."""
+    matrix = gmaps.distance_matrix(addresses, addresses, mode="driving")
+    distances = [[entry['duration']['value'] for entry in row['elements']] for row in matrix['rows']]
+    return distances
 
+def compute_routes(distance_matrix, num_vehicles):
+    """Calcula rotas otimizadas usando o OR-Tools."""
+    manager = pywrapcp.RoutingIndexManager(len(distance_matrix), num_vehicles, 0)
+    routing = pywrapcp.RoutingModel(manager)
 
-# Função para comparar DataFrame com dados colados
-def compare_dataframes(df1, pasted_data):
-    TESTDATA = StringIO(pasted_data)
-    df2 = pd.read_csv(TESTDATA, sep="\t", header=None)
-    df2.columns = ['Operation', 'Ticker Bloomberg', 'Qtde', 'Price']
-    return df1.equals(df2)
+    def distance_callback(from_index, to_index):
+        from_node = manager.IndexToNode(from_index)
+        to_node = manager.IndexToNode(to_index)
+        return distance_matrix[from_node][to_node]
 
+    transit_callback_index = routing.RegisterTransitCallback(distance_callback)
+    routing.SetArcCostEvaluatorOfAllVehicles(transit_callback_index)
+    search_parameters = pywrapcp.DefaultRoutingSearchParameters()
+    search_parameters.first_solution_strategy = routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC
+
+    solution = routing.SolveWithParameters(search_parameters)
+    if not solution:
+        return []
+
+    routes = []
+    for vehicle_id in range(num_vehicles):
+        index = routing.Start(vehicle_id)
+        route = []
+        while not routing.IsEnd(index):
+            node_index = manager.IndexToNode(index)
+            route.append(node_index)
+            index = solution.Value(routing.NextVar(index))
+        routes.append(route)
+    return routes
 
 # Streamlit app
-def main():
-    st.title('BLISS pro GUGUZINHO')
+st.title("Dashboard de Otimização de Rotas")
 
-    # Upload do arquivo Excel
-    uploaded_file = st.file_uploader("Choose a file")
-    if uploaded_file is not None:
-        processed_data = process_file(uploaded_file)
-        st.write('Processed Data')
-        st.dataframe(processed_data)
+# User input for addresses
+addresses = st.text_area("Insira os endereços:", height=300, help="Digite cada endereço em uma nova linha.")
+num_vehicles = st.number_input("Número de Motoristas:", min_value=1, max_value=10, value=1)
 
-        # Área para colar os dados para comparação
-        st.subheader('Paste Data Here for Comparison')
-        pasted_data = st.text_area("Paste the data here", height=300)
+if st.button("Calcular Rotas"):
+    if addresses:
+        address_list = addresses.split('\n')
+        distance_matrix = get_distance_matrix(address_list)
+        routes = compute_routes(distance_matrix, num_vehicles)
 
-        if st.button('Compare Data'):
-            if compare_dataframes(processed_data, pasted_data):
-                st.success('The datasets are identical.')
-            else:
-                st.error('There are differences between the datasets.')
-
-
-if __name__ == "__main__":
-    main()
+        # Exibir rotas
+        for i, route in enumerate(routes):
+            st.subheader(f"Rota para Motorista {i+1}")
+            route_addresses = [address_list[idx] for idx in route]
+            st.write(" -> ".join(route_addresses))
