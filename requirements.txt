@@ -62,3 +62,8 @@ googlemaps
 folium
 streamlit
 streamlit-folium
+streamlit
+pandas
+numpy
+yfinance
+matplotlib
