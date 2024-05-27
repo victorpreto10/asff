@@ -67,3 +67,4 @@ pandas
 numpy
 yfinance
 matplotlib
+scipy
