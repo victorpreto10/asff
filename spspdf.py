@@ -46,29 +46,21 @@ def main():
     exposure = st.number_input("Digite o valor de exposição ($)", value=100000)
     confidence_interval = st.slider("Intervalo de Confiança", 90, 99, 95) / 100.0
     holding_period = st.slider("Holding Period (dias)", 1, 30, 1)
-    method = st.selectbox("Método de Cálculo do Va1R", ['Histórico', 'Paramétrico', 'Monte Carlo'])
+    method = st.selectbox("Método de Cálculo do VaR", ['Histórico', 'Paramétrico', 'Monte Carlo'])
 
     # Data download
     end_date = datetime.now()
     start_date = end_date - timedelta(days=365 * 5)  # Last five years
-    
-    var = None  # Define var como None para evitar UnboundLocalError se não entrar em nenhuma condição
-    
     if st.button("Carregar dados e calcular VaR"):
         prices = download_data(stock, start_date, end_date)
         if method == 'Histórico':
             var = calculate_var_historical(prices, confidence_interval, holding_period)
         elif method == 'Paramétrico':
             var = calculate_var_parametric(prices, confidence_interval, holding_period)
-        # Implementar o método Monte Carlo se necessário
-        # elif method == 'Monte Carlo':
-        #     var = calculate_var_monte_carlo(prices, confidence_interval, holding_period)
+        var_amount = exposure * var
+        st.write(f"VaR: ${var_amount:,.2f}")
 
-        if var is not None:
-            var_amount = exposure * var
-            st.write(f"VaR: ${var_amount:,.2f}")
-        else:
-            st.error("Erro ao calcular o VaR. Verifique os dados e tente novamente.")
+        plot_prices_and_var(prices, var, confidence_interval, holding_period, exposure)
 
 # Outras funções e definições
 
