@@ -6,8 +6,13 @@ from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 
 def download_data(stock, start_date, end_date):
-    data = yf.download(stock, start=start_date, end=end_date)
-    return data['Close']
+    try:
+        data = yf.download(stock, start=start_date, end=end_date, progress=False)
+        return data['Close']
+    except Exception as e:
+        st.error(f"Erro ao baixar dados: {e}")
+        return pd.Series()
+
 
 def calculate_var_historical(prices, confidence_interval, holding_period):
     returns = prices.pct_change()
