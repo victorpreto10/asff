@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
+from scipy.stats import norm
 
 def download_data(stock, start_date, end_date):
     try:
