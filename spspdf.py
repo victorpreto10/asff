@@ -51,7 +51,7 @@ def main():
     end_date = st.date_input("Data de Término", datetime.now(), key="end_date_input")
 
     if st.button("Carregar dados e calcular VaR", key="calculate_var_button"):
-        prices = download_data(stock, start_date, end_order)
+        prices = download_data(stock, start_date, end_date)
         if prices.empty:
             st.error("Nenhum dado foi retornado. Verifique as datas e o símbolo da ação.")
         else:
