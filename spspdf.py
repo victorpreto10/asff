@@ -28,19 +28,27 @@ def calculate_var_parametric(prices, confidence_interval, holding_period):
     var = norm.ppf(1 - confidence_interval, mean, sigma) * np.sqrt(holding_period)
     return var
 
-def plot_prices_and_var(prices, var, confidence_interval, holding_period, exposure):
+def calculate_rolling_var(prices, confidence_interval, holding_period, window_size=252):
+    """Calcula o VaR utilizando uma janela móvel dos preços."""
+    rolling_vars = []
+    for i in range(window_size, len(prices)):
+        window_prices = prices[i-window_size:i]
+        var = calculate_var_historical(window_prices, confidence_interval, holding_period)
+        rolling_vars.append(var)
+    return np.array(rolling_target)
+
+def plot_prices_and_rolling_var(prices, rolling_vars, confidence_interval, exposure):
     plt.figure(figsize=(10, 5))
     plt.plot(prices.index, prices, label='Price')
-    var_line = prices.iloc[-1] - var * exposure
-    plt.axhline(y=var_line, color='r', linestyle='-', label=f'VaR {confidence_interval * 100}%')
-    plt.title(f'Price and VaR at {confidence_interval * 100}% Confidence')
+    var_lines = prices.iloc[-len(rolling_vars):] - rolling_vars * exposure
+    plt.plot(prices.index[-len(rolling_vars):], var_lines, color='r', linestyle='-', label=f'VaR {confidence_interval * 100}% Rolling')
+    plt.title(f'Price and Rolling VaR at {confidence_interval * 100}% Confidence')
     plt.legend()
     st.pyplot(plt)
-
+    
 def main():
     st.title("Sistema de VaR para Ativos Lineares")
 
-    # A chave ('key') é adicionada para garantir que cada widget seja único
     stock = st.text_input("Digite o símbolo da ação (ex: AAPL, GOOGL)", value='AAPL', key="stock_input")
     exposure = st.number_input("Digite o valor de exposição ($)", value=100000, key="exposure_input")
     confidence_interval = st.slider("Intervalo de Confiança", 90, 99, 95, key="confidence_interval_slider") / 100.0
@@ -55,18 +63,13 @@ def main():
         if prices.empty:
             st.error("Nenhum dado foi retornado. Verifique as datas e o símbolo da ação.")
         else:
-            var = 0
             if method == 'Histórico':
                 var = calculate_var_historical(prices, confidence_interval, holding_period)
+                rolling_vars = calculate_rolling_var(prices, confidence_interval, holding_period)
+                plot_prices_and_rolling_var(prices, rolling_vars, confidence_interval, exposure)
             elif method == 'Paramétrico':
                 var = calculate_var_parametric(prices, confidence_interval, holding_period)
-            
-            var_amount = exposure * var
-            st.write(f"VaR: ${var_amount:,.2f}")
-
-            plot_prices_and_var(prices, var, confidence_interval, holding_period, exposure)
+                plot_prices_and_var(prices, var, confidence_interval, holding_period, exposure)
 
 if __name__ == "__main__":
     main()
-
-
