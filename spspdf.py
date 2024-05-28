@@ -51,8 +51,10 @@ def main():
     start_date = st.date_input("Data de Início", datetime.now() - timedelta(days=365 * 5))
     end_date = st.date_input("Data de Término", datetime.now())
 
+    var = 0  # Definindo var como 0 para evitar UnboundLocalError
+
     if st.button("Carregar dados e calcular VaR"):
-        prices = download_data(stock, start_date, end_date)
+        prices = downloadData(stock, start_date, end_date)
         if prices.empty:
             st.error("Nenhum dado foi retornado. Verifique as datas e o símbolo da ação.")
         else:
@@ -60,10 +62,18 @@ def main():
                 var = calculate_var_historical(prices, confidence_interval, holding_period)
             elif method == 'Paramétrico':
                 var = calculate_var_parametric(prices, confidence_interval, holding_period)
+            elif method == 'Monte Carlo':
+                # Aqui você pode adicionar o cálculo para Monte Carlo se planejado
+                var = calculate_var_monte_carlo(prices, confidence_interval, holding_period)
+
             var_amount = exposure * var
             st.write(f"VaR: ${var_amount:,.2f}")
 
             plot_prices_and_var(prices, var, confidence_interval, holding_period, exposure)
+
+if __name__ == "__main__":
+    main()
+
 
 if __name__ == "__main__":
     main()
