@@ -45,7 +45,7 @@ def main():
     exposure = st.number_input("Digite o valor de exposição ($)", value=100000, key="exposure_input")
     confidence_interval = st.slider("Intervalo de Confiança", 90, 99, 95, key="confidence_interval_slider") / 100.0
     holding_period = st.slider("Holding Period (dias)", 1, 30, 1, key="holding_period_slider")
-    method = st.selectbox("Método de Cálculo do VaR", ['Histórico', 'Paramétrico', 'Monte Carlo'], key="var_method_select")
+    method = st.selectbox("Método de Cálculo do VaR", ['Histórico', 'Paramétrico'], key="var_method_select")
 
     start_date = st.date_input("Data de Início", datetime.now() - timedelta(days=365 * 5), key="start_date_input")
     end_date = st.date_input("Data de Término", datetime.now(), key="end_date_input")
