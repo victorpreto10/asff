@@ -64,7 +64,7 @@ def main():
             var_amount = exposure * var
             st.write(f"VaR: ${var_amount:,.2f}")
 
-            plot_prices_and_var(prices, var, confidence_interval, holding a_period, exposure)
+            plot_prices_and_var(prices, var, confidence_interval, holding_period, exposure)
 
 if __name__ == "__main__":
     main()
