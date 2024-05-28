@@ -40,36 +40,35 @@ def plot_prices_and_var(prices, var, confidence_interval, holding_period, exposu
 def main():
     st.title("Sistema de VaR para Ativos Lineares")
 
-    # Inputs
-    stock = st.text_input("Digite o símbolo da ação (ex: AAPL, GOOGL)", value='AAPL')
-    exposure = st.number_input("Digite o valor de exposição ($)", value=100000)
-    confidence_interval = st.slider("Intervalo de Confiança", 90, 99, 95) / 100.0
-    holding_period = st.slider("Holding Period (dias)", 1, 30, 1)
-    method = st.selectbox("Método de Cálculo do VaR", ['Histórico', 'Paramétrico', 'Monte Carlo'])
+    # A chave ('key') é adicionada para garantir que cada widget seja único
+    stock = st.text_input("Digite o símbolo da ação (ex: AAPL, GOOGL)", value='AAPL', key="stock_input")
+    exposure = st.number_input("Digite o valor de exposição ($)", value=100000, key="exposure_input")
+    confidence_interval = st.slider("Intervalo de Confiança", 90, 99, 95, key="confidence_interval_slider") / 100.0
+    holding_period = st.slider("Holding Period (dias)", 1, 30, 1, key="holding_period_slider")
+    method = st.selectbox("Método de Cálculo do VaR", ['Histórico', 'Paramétrico', 'Monte Carlo'], key="var_method_select")
 
-    # User-selected data range
-    start_date = st.date_input("Data de Início", datetime.now() - timedelta(days=365 * 5))
-    end_date = st.date_input("Data de Término", datetime.now())
+    start_date = st.date_input("Data de Início", datetime.now() - timedelta(days=365 * 5), key="start_date_input")
+    end_date = st.date_input("Data de Término", datetime.now(), key="end_date_input")
 
-    var = 0  # Definindo var como 0 para evitar UnboundLocalError
-
-    if st.button("Carregar dados e calcular VaR"):
-        prices = downloadData(stock, start_date, end_date)
+    if st.button("Carregar dados e calcular VaR", key="calculate_var_button"):
+        prices = download_data(stock, start_date, end_order)
         if prices.empty:
             st.error("Nenhum dado foi retornado. Verifique as datas e o símbolo da ação.")
         else:
+            var = 0
             if method == 'Histórico':
                 var = calculate_var_historical(prices, confidence_interval, holding_period)
             elif method == 'Paramétrico':
                 var = calculate_var_parametric(prices, confidence_interval, holding_period)
-            elif method == 'Monte Carlo':
-                # Aqui você pode adicionar o cálculo para Monte Carlo se planejado
-                var = calculate_var_monte_carlo(prices, confidence_interval, holding_period)
-
+            
             var_amount = exposure * var
             st.write(f"VaR: ${var_amount:,.2f}")
 
-            plot_prices_and_var(prices, var, confidence_interval, holding_period, exposure)
+            plot_prices_and_var(prices, var, confidence_interval, holding a_period, exposure)
+
+if __name__ == "__main__":
+    main()
+
 
 if __name__ == "__main__":
     main()
