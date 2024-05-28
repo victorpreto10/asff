@@ -48,7 +48,7 @@ def main():
 
     if st.button("Carregar dados e calcular VaR"):
         prices = download_data(stock, start_date, end_date)
-        prices = downloadData(stock, start_date, end_date)
+       
         if prices.empty:
             st.error("Nenhum dado foi retornado. Verifique as datas e o símbolo da ação.")
         else:
